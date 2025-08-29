@@ -8,15 +8,15 @@ import shap
 from pathlib import Path
 import joblib
 
-# Suppress ScriptRunContext warning from lifelines/streamlit
 warnings.filterwarnings("ignore", message="missing ScriptRunContext")
 warnings.filterwarnings("ignore", message="ScriptRunContext")
 
 st.set_page_config(page_title="ADHD Persistence", layout="wide")
 
-# =======================
+
 # Artifacts
-# =======================
+
+
 ARTIFACTS = {
     "Adjusted (include SES)": {
         "model": "cph_a.pkl",
@@ -30,9 +30,8 @@ ARTIFACTS = {
     },
 }
 
-# =======================
-# Raw input schema
-# =======================
+
+# Raw input 
 SES_LEVELS = ["Low", "Medium", "High"]
 ADHD_CLASS_LEVELS = [
     "non_stimulant",
@@ -52,9 +51,9 @@ COMORBID_MEDS = [
     "Ativan","Clonazepam",
 ]
 
-# =======================
+
 # Loaders & helpers
-# =======================
+
 @st.cache_resource
 def load_artifacts(choice: str):
     cfg = ARTIFACTS[choice]
@@ -135,7 +134,7 @@ def preprocess_raw_row(raw_row: pd.DataFrame, feature_names: list, include_ses: 
     return processed_row
 
 def predict_partial_hazard(cph, X_df: pd.DataFrame) -> float:
-    # lifelines expects these columns present (not used in score, but keeps API consistent)
+
     dfp = X_df.copy()
     dfp["days_on_first_med"] = 0.0
     dfp["switched_med"] = 0
@@ -180,22 +179,22 @@ def shap_waterfall(explainer, X_df: pd.DataFrame, title: str, max_display=12):
     except Exception as e:
         st.warning(f"SHAP explanation could not be generated: {str(e)}")
 
-# =======================
+
 # UI
-# =======================
-st.title("ADHD Medication Persistence — Survival & Explainability (CoxPH)")
+
+st.title("ADHD Medication Persistence — Survival & Explainability")
 
 model_variant = st.sidebar.radio("Model variant", list(ARTIFACTS.keys()))
 include_ses = (model_variant == "Adjusted (include SES)")
 
-# Load model + feature names (pre is now just a list, not a transformer)
+# Load model + feature names 
 try:
     cph, pre, feat_names = load_artifacts(model_variant)
 except Exception as e:
     st.error(f"Could not load artifacts for '{model_variant}'. Ensure pkl files exist.\n{e}")
     st.stop()
 
-# Collect raw inputs
+# Collecting raw inputs
 raw_row = build_raw_row(include_ses)
 # Preprocess to get model input
 try:
@@ -234,7 +233,7 @@ with left:
 
     risk = predict_partial_hazard(cph, X_df)
     
-    # Format risk value appropriately for display
+    
     if risk < 0.001:
         risk_display = f"{risk:.2e}"  # Scientific notation for very small values
     else:
@@ -301,12 +300,12 @@ def generate_clinical_interpretation(model_variant, raw_row, risk, include_ses):
     
     return interpretation
 
-# Enhanced visual design with better spacing and organization
+
 st.markdown("---")
-st.subheader("📊 Additional Insights & Model Understanding")
+st.subheader(" Additional Insights & Model Understanding")
 
 # Create a more organized layout with tabs
-tab1, tab2, tab3 = st.tabs(["📈 Risk Analysis", "🔍 Model Insights", "💾 Export Results"])
+tab1, tab2, tab3 = st.tabs(["Risk Analysis", "Model Insights", " Export Results"])
 
 with tab1:
     # Create two columns for risk analysis graphs
@@ -369,17 +368,17 @@ with col2:
     **Current Prediction: {risk:.3f}**
     
     **Risk Categories:**
-    - 🟢 **Very Low Risk** (< 0.3): Excellent persistence expected
-    - 🟡 **Low Risk** (0.3 - 0.8): Good persistence expected  
-    - 🟠 **Average Risk** (0.8 - 1.2): Typical persistence pattern
-    - 🔴 **High Risk** (> 1.2): May need additional support
+    -  **Very Low Risk** (< 0.3): Excellent persistence expected
+    -  **Low Risk** (0.3 - 0.8): Good persistence expected  
+    -  **Average Risk** (0.8 - 1.2): Typical persistence pattern
+    -  **High Risk** (> 1.2): May need additional support
     
     *Note: Most patients in the training data showed good medication persistence, which is why the model tends to predict lower risks.*
     """)
 
 with tab2:
     # Global feature importance from CoxPH model
-    st.markdown("#### 🌍 Global Feature Importance")
+    st.markdown("####  Global Feature Importance")
     
     try:
         # Get feature importance from CoxPH model (coefficients)
@@ -407,12 +406,10 @@ with tab2:
         st.warning(f"Could not generate global feature importance: {e}")
             
 
-# Add clinical interpretation section
+# clinical interpretation section
 st.markdown("---")
 clinical_text = generate_clinical_interpretation(model_variant, raw_row, risk, include_ses)
 st.markdown(clinical_text)
 
-st.info(
-    "Tip: Use the sidebar to switch model variant (Adjusted vs Unadjusted), set SES, medication class, "
-    "and add comorbid meds. All visualizations and interpretations update in real-time."
-)
+
+
